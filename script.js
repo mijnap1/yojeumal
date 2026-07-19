@@ -365,10 +365,86 @@ const usageDetails = {
 };
 
 const mediaDetails = {
+  "너 T야?": {
+    src: "assets/neo-t-archive.webp",
+    alt: "친구들과 사진을 찍는 폭스클럽 장면을 종이 인쇄 질감으로 가공한 이미지",
+    caption: "Archive frame / 폭스클럽",
+    position: "center 30%",
+  },
+  "어쩔티비": {
+    src: "assets/eojjeol-tv-archive.webp",
+    alt: "교복을 입은 신혜선의 SNL 코리아 장면을 종이 인쇄 질감으로 가공한 이미지",
+    caption: "Archive frame / SNL 코리아",
+    position: "center 34%",
+  },
   "무야호": {
     src: "assets/muyaho-archive.webp",
     alt: "두 손을 입가에 모으고 무야호를 외치는 장면을 종이 인쇄 질감으로 가공한 이미지",
     caption: "Archive frame / 무한도전",
+  },
+  "꽁꽁 얼어붙은 한강 위로 고양이가": {
+    src: "assets/frozen-hangang-cat-archive.webp",
+    alt: "얼어붙은 한강 위를 조심스럽게 걷는 고양이가 나온 뉴스 화면",
+    caption: "Archive frame / MBN 뉴스",
+    position: "center 42%",
+  },
+  "완전 럭키비키잖아": {
+    src: "assets/lucky-vicky-archive.webp",
+    alt: "장원영이 손을 펼치며 완전 럭키비키잖아라고 말하는 음악방송 장면",
+    caption: "Archive frame / M COUNTDOWN",
+    position: "center 34%",
+  },
+  "티라미수 케익": {
+    src: "assets/tiramisu-cake-archive.webp",
+    alt: "두 캐릭터가 티라미수 케익 밈의 동작을 하는 화면",
+    caption: "Archive frame / 티라미수 케익",
+    position: "center 44%",
+  },
+  "삐끼삐끼": {
+    src: "assets/ppikki-ppikki-archive.webp",
+    alt: "야구장에서 삐끼삐끼 춤을 추는 치어리더의 두 장면",
+    caption: "Archive frame / 삐끼삐끼",
+    position: "center 28%",
+  },
+  "잔말 말고 에어컨 파워냉방으로 틀어": {
+    src: "assets/power-cooling-archive.webp",
+    alt: "김용명이 분장한 채 파워 냉방으로 틀어잉이라고 말하는 코미디 장면",
+    caption: "Archive frame / 코미디빅리그",
+    position: "center 28%",
+  },
+  "개웃겨서 도티 낳음": {
+    src: "assets/doti-birth-archive.webp",
+    alt: "아기를 안은 사람의 사진에 개웃겨서 도티 낳음이라는 문구가 합성된 밈 이미지",
+    caption: "Archive frame / 도티 낳음",
+    position: "center 34%",
+  },
+  "두쫀쿠": {
+    src: "assets/dujjonku-archive.webp",
+    alt: "초콜릿과 피스타치오 속이 보이는 두바이 초콜릿 쫀득 쿠키",
+    caption: "Archive frame / 두쫀쿠",
+    position: "center 46%",
+  },
+  "뒷공부": {
+    src: "assets/backstudy-archive.webp",
+    alt: "교실에서 안경을 쓰고 공부하는 학생의 장면",
+    caption: "Archive frame / 뒷공부",
+    position: "center 36%",
+  },
+  "밤티": {
+    src: "assets/bamti-archive.webp",
+    alt: "옷차림을 두고 연인이 쪽팔려서 못 다니겠다고 말하는 메시지가 합성된 영상 장면",
+    caption: "Archive frame / 밤티",
+    position: "center 30%",
+  },
+  "거제 야호": {
+    src: "assets/geoje-yaho-archive.webp",
+    alt: "차 안에서 손을 펼치며 거제 야호를 외치는 장면을 종이 인쇄 질감으로 가공한 이미지",
+    caption: "Archive frame / 거제 야호",
+  },
+  "자려고 누웠는데 양의지": {
+    src: "assets/yang-euiji-archive.webp",
+    alt: "팔을 베고 옆으로 누운 양의지의 장면을 종이 인쇄 질감으로 가공한 이미지",
+    caption: "Archive frame / 양의지",
   },
 };
 
@@ -506,10 +582,12 @@ function selectEvent(event, date, term) {
   if (media) {
     definitionMediaImage.src = media.src;
     definitionMediaImage.alt = media.alt;
+    definitionMediaImage.style.objectPosition = media.position ?? "center 24%";
     definitionMediaCaption.textContent = media.caption;
   } else {
     definitionMediaImage.removeAttribute("src");
     definitionMediaImage.alt = "";
+    definitionMediaImage.style.removeProperty("object-position");
     definitionMediaCaption.textContent = "";
   }
   definitionPanel.classList.add("open");
@@ -551,8 +629,113 @@ window.addEventListener("load", () => requestAnimationFrame(centerPresent));
 window.addEventListener("resize", centerPresent);
 
 timeline.addEventListener("wheel", (event) => {
+  stopTimelineMomentum();
   if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
     event.preventDefault();
     timeline.scrollLeft += event.deltaY;
   }
 }, { passive: false });
+
+const dragThreshold = 8;
+let dragPointerId = null;
+let dragStartX = 0;
+let dragStartScrollLeft = 0;
+let dragMoved = false;
+let suppressTimelineClick = false;
+let dragLastX = 0;
+let dragLastTime = 0;
+let dragVelocity = 0;
+let momentumFrame = null;
+
+function stopTimelineMomentum() {
+  if (momentumFrame === null) return;
+  cancelAnimationFrame(momentumFrame);
+  momentumFrame = null;
+}
+
+function startTimelineMomentum(initialVelocity) {
+  stopTimelineMomentum();
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  let velocity = Math.max(-2.6, Math.min(2.6, initialVelocity));
+  if (Math.abs(velocity) < 0.04) return;
+
+  let previousTime = performance.now();
+  const glide = (currentTime) => {
+    const elapsed = Math.min(currentTime - previousTime, 32);
+    previousTime = currentTime;
+    const previousScrollLeft = timeline.scrollLeft;
+    timeline.scrollLeft += velocity * elapsed;
+    velocity *= Math.pow(0.92, elapsed / 16.67);
+
+    const reachedEdge = timeline.scrollLeft === previousScrollLeft;
+    if (reachedEdge || Math.abs(velocity) < 0.015) {
+      momentumFrame = null;
+      return;
+    }
+    momentumFrame = requestAnimationFrame(glide);
+  };
+
+  momentumFrame = requestAnimationFrame(glide);
+}
+
+timeline.addEventListener("pointerdown", (event) => {
+  if ((event.pointerType && event.pointerType !== "mouse") || event.button !== 0) return;
+
+  stopTimelineMomentum();
+  dragPointerId = event.pointerId;
+  dragStartX = event.clientX;
+  dragStartScrollLeft = timeline.scrollLeft;
+  dragMoved = false;
+  suppressTimelineClick = false;
+  dragLastX = event.clientX;
+  dragLastTime = performance.now();
+  dragVelocity = 0;
+});
+
+timeline.addEventListener("pointermove", (event) => {
+  if (event.pointerId !== dragPointerId) return;
+
+  const distance = event.clientX - dragStartX;
+  if (!dragMoved && Math.abs(distance) < dragThreshold) return;
+
+  const currentTime = performance.now();
+  const elapsed = Math.max(currentTime - dragLastTime, 1);
+  const currentVelocity = -(event.clientX - dragLastX) / elapsed;
+  dragVelocity = dragVelocity * 0.65 + currentVelocity * 0.35;
+  dragLastX = event.clientX;
+  dragLastTime = currentTime;
+  if (!dragMoved) {
+    dragMoved = true;
+    timeline.setPointerCapture(event.pointerId);
+  }
+  timeline.classList.add("dragging");
+  timeline.scrollLeft = dragStartScrollLeft - distance;
+  event.preventDefault();
+});
+
+function finishTimelineDrag(event) {
+  if (event.pointerId !== dragPointerId) return;
+
+  const shouldGlide = dragMoved && event.type === "pointerup";
+  const releaseVelocity = dragVelocity;
+  if (timeline.hasPointerCapture(event.pointerId)) {
+    timeline.releasePointerCapture(event.pointerId);
+  }
+  suppressTimelineClick = dragMoved;
+  dragPointerId = null;
+  dragMoved = false;
+  timeline.classList.remove("dragging");
+  if (shouldGlide) startTimelineMomentum(releaseVelocity);
+}
+
+timeline.addEventListener("pointerup", finishTimelineDrag);
+timeline.addEventListener("pointercancel", finishTimelineDrag);
+
+timeline.addEventListener("click", (event) => {
+  if (!suppressTimelineClick) return;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  suppressTimelineClick = false;
+}, true);

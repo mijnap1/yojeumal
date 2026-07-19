@@ -30,8 +30,8 @@ python3 -m http.server 8000
 ├── index.html          # 타임라인
 ├── script.js           # 유행어 데이터와 인터랙션
 ├── styles.css          # 레이아웃과 스타일
-├── about.html          # 프로젝트 소개
-├── sources.html        # 참고 출처
+├── about/index.html    # 프로젝트 소개 (/about/)
+├── sources/index.html  # 참고 출처 (/sources/)
 ├── assets/             # 밈 이미지 아카이브
 └── yojeumal-icon.png   # 사이트 아이콘
 ```
@@ -41,7 +41,7 @@ python3 -m http.server 8000
 - 당시의 기사, 방송, 원본 콘텐츠 등 사용 기록을 확인할 수 있는 표현을 우선합니다.
 - 최초 발생일이 불명확하면 유행이 널리 확인된 대표 날짜를 사용합니다.
 - 조롱성이나 거친 표현은 의미와 사용 맥락을 함께 설명합니다.
-- 출처는 [`sources.html`](sources.html)에 정리합니다.
+- 출처는 [`sources/`](sources/)에 정리합니다.
 
 ## Deployment
 
