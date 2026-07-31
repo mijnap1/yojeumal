@@ -26,43 +26,32 @@
 
 ## Features
 
-**Horizontal timeline**
-
-2020년부터 현재까지의 유행어를 하나의 긴 시간축 위에 배치합니다. 마우스 드래그, 트랙패드, 휠, 모바일 스와이프를 모두 지원합니다.
-
-**Context cards**
-
-단어를 누르면 뜻, 유래, 사용 상황, 예문이 한 카드 안에서 열립니다. 단어만 저장하는 게 아니라 그 말이 쓰인 분위기까지 같이 보여주는 구조입니다.
-
-**Archive frames**
-
-일부 유행어에는 원본 장면을 가공한 이미지가 들어갑니다. 카드 오른쪽 화살표를 누르면 앞면의 설명에서 뒷면의 이미지로 전환됩니다.
-
-**Permalinks**
-
-각 유행어는 고유한 URL 해시를 가집니다. 예를 들어 특정 단어를 연 상태에서 링크를 공유하면, 다시 들어왔을 때 같은 카드가 바로 열립니다.
-
-**Responsive layout**
-
-큰 화면에서는 넓게 훑고, 모바일에서는 카드와 화살표 위치가 흐트러지지 않도록 따로 조정했습니다.
+| Feature | Detail |
+| --- | --- |
+| Timeline | 2020년부터 현재까지의 유행어를 날짜순으로 배치합니다. |
+| Drag | 마우스로 누른 채 끌 수 있고, 트랙패드·휠·모바일 스와이프도 그대로 동작합니다. |
+| Cards | 단어를 누르면 뜻, 유래, 쓰는 상황, 예문이 한 번에 열립니다. |
+| Frames | 이미지가 있는 항목은 카드를 뒤집어 원본 장면을 볼 수 있습니다. |
+| Links | 열린 카드마다 URL이 생겨서 특정 유행어를 바로 공유할 수 있습니다. |
+| Mobile | 작은 화면에서는 카드 폭, 여백, 화살표 위치를 따로 조정합니다. |
 
 <br>
 
 ## Code
 
-The site is intentionally small: plain HTML, CSS, and JavaScript. No build step, no framework, no package install.
+빌드 과정 없이 정적 파일만으로 동작합니다.
 
 ```txt
 .
-├── index.html          # timeline page
-├── script.js           # data, layout, drag, cards, permalinks
-├── styles.css          # responsive layout and interactions
-├── about/index.html    # about page
-├── sources/index.html  # source list
-└── assets/             # archive frame images
+├── index.html
+├── script.js
+├── styles.css
+├── about/
+├── sources/
+└── assets/
 ```
 
-The timeline data lives in `script.js` as structured arrays and objects:
+유행어 데이터는 `script.js` 안에서 관리합니다. 날짜 목록과 카드 내용을 분리해두어, 새 단어를 추가할 때 같은 키만 맞추면 됩니다.
 
 ```js
 const trends = [
@@ -74,9 +63,13 @@ const trends = [
 const definitions = {
   "무야호": "아주 신나거나 만족스러운 순간에 외치는 감탄사로 쓰여요.",
 };
+
+const usageDetails = {
+  "무야호": ["신나거나 일이 잘 풀렸을 때", "“내일 휴강이다. 무야호!”"],
+};
 ```
 
-Each term is rendered onto the timeline based on its date:
+날짜는 픽셀 좌표로 변환해서 시간축 위에 놓습니다.
 
 ```js
 function xFor(date) {
@@ -84,7 +77,7 @@ function xFor(date) {
 }
 ```
 
-Permalinks are generated from the term itself, so a selected card can be shared directly:
+카드를 열면 단어 이름으로 URL 해시를 만듭니다. 한국어도 그대로 쓸 수 있게 정규화한 뒤, 공유하기 좋은 형태로 바꿉니다.
 
 ```js
 function termToSlug(term) {
@@ -94,6 +87,17 @@ function termToSlug(term) {
     .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
     .replace(/^-+|-+$/g, "");
 }
+```
+
+이미지가 있는 카드만 `mediaDetails`에 따로 등록합니다.
+
+```js
+const mediaDetails = {
+  "무야호": {
+    src: "assets/muyaho-archive.webp",
+    caption: "Archive frame / 무한도전",
+  },
+};
 ```
 
 <br>
