@@ -211,7 +211,7 @@ body { background: #fff; }
 }
 
 .event {
-  --distance: calc(2.2rem + var(--lane) * 3.5rem);
+  --distance: calc(1.9rem + var(--lane) * 2.8rem);
   position: absolute;
   z-index: 1;
   top: 50%;
@@ -845,7 +845,7 @@ body { background: #fff; }
 }
 
 @media (max-height: 700px) {
-  .event { --distance: calc(1.8rem + var(--lane) * 2.7rem); }
+  .event { --distance: calc(1.55rem + var(--lane) * 2.25rem); }
   .term { font-size: 0.95rem; }
 }
 
@@ -888,7 +888,7 @@ body { background: #fff; }
     letter-spacing: 0.07em;
   }
 
-  .event { --distance: calc(2rem + var(--lane) * 3rem); }
+  .event { --distance: calc(1.7rem + var(--lane) * 2.35rem); }
 
   .event-card { max-width: 9.5rem; }
 
