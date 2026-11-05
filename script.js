@@ -886,6 +886,8 @@ const definitionMediaCaption = document.querySelector(".definition-media-caption
 const definitionFlip = document.querySelector(".definition-flip");
 const definitionClose = document.querySelector(".definition-close");
 const dragHint = document.querySelector(".drag-hint");
+const yearRail = document.querySelector(".year-rail");
+const yearStops = [];
 let selectedEvent = null;
 const start = new Date("2020-01-01T00:00:00");
 const end = new Date("2026-11-04T00:00:00");
@@ -913,8 +915,7 @@ function estimatedLabelWidth(term) {
   const textWidth = Array.from(term).reduce((width, character) => {
     return width + (/[ㄱ-힝]/.test(character) ? 22 : 12);
   }, 0);
-  const iconWidth = iconPaths[term] ? 30 : 0;
-  return Math.max(88, textWidth + iconWidth);
+  return Math.max(88, textWidth);
 }
 
 function termToSlug(term) {
@@ -940,11 +941,20 @@ function replaceHash(term = "") {
 }
 
 for (let year = 2020; year <= 2026; year += 1) {
+  const x = xFor(`${year}-01-01`);
   const mark = document.createElement("span");
   mark.className = "year-mark";
-  mark.textContent = year;
-  mark.style.setProperty("--x", `${xFor(`${year}-01-01`)}px`);
+  mark.dataset.year = year;
+  mark.style.setProperty("--x", `${x}px`);
   track.append(mark);
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.innerHTML = `<span>20</span>${String(year).slice(2)}`;
+  button.setAttribute("aria-label", `${year}년으로 이동`);
+  button.addEventListener("click", () => jumpToYear(x));
+  yearRail.append(button);
+  yearStops.push({ x, button });
 }
 
 trends.forEach(([date, term], index) => {
@@ -968,7 +978,7 @@ trends.forEach(([date, term], index) => {
   event.id = `term-${termToSlug(term)}`;
   event.innerHTML = `
     <div class="event-card">
-      <span class="term-row">${renderIcon(term)}<span class="term">${term}</span></span>
+      <span class="term-row"><span class="term">${term}</span></span>
       <time class="date" datetime="${date}">${displayMonth(date)}</time>
     </div>`;
   event.addEventListener("click", (clickEvent) => {
@@ -1039,11 +1049,15 @@ function selectEvent(event, date, term, updateHash = true) {
     definitionMediaImage.src = media.src;
     definitionMediaImage.alt = media.alt;
     definitionMediaImage.style.objectPosition = media.position ?? "center 24%";
+    definitionFlip.style.setProperty("--thumb", `url("${media.src}")`);
+    definitionFlip.style.setProperty("--thumb-position", media.position ?? "center 24%");
     definitionMediaCaption.textContent = media.caption;
   } else {
     definitionMediaImage.removeAttribute("src");
     definitionMediaImage.alt = "";
     definitionMediaImage.style.removeProperty("object-position");
+    definitionFlip.style.removeProperty("--thumb");
+    definitionFlip.style.removeProperty("--thumb-position");
     definitionMediaCaption.textContent = "";
   }
   definitionPanel.classList.add("open");
@@ -1126,6 +1140,24 @@ function openEventFromHash() {
   return true;
 }
 
+function jumpToYear(x) {
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  stopTimelineMomentum();
+  dismissDragHint();
+  timeline.scrollTo({
+    left: x + timeline.clientWidth * 0.25,
+    behavior: reducedMotion ? "auto" : "smooth",
+  });
+}
+
+function updateCurrentYear() {
+  const current = yearStops.findLast(({ x }) => timeline.scrollLeft >= x) ?? yearStops[0];
+  yearStops.forEach(({ button }) => {
+    if (button === current.button) button.setAttribute("aria-current", "true");
+    else button.removeAttribute("aria-current");
+  });
+}
+
 function centerPresent() {
   timeline.style.scrollBehavior = "auto";
   timeline.scrollLeft = timeline.scrollWidth;
@@ -1133,8 +1165,10 @@ function centerPresent() {
 
 window.addEventListener("load", () => requestAnimationFrame(() => {
   if (!openEventFromHash()) centerPresent();
+  updateCurrentYear();
   showDragHint();
 }));
+timeline.addEventListener("scroll", updateCurrentYear, { passive: true });
 window.addEventListener("resize", () => {
   if (selectedEvent) {
     const selected = eventsBySlug.get(readHashSlug());
